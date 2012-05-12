@@ -148,7 +148,7 @@ stronglyConnCompR [] = []  -- added to avoid creating empty array in graphFromEd
 stronglyConnCompR edges0
   = map decode forest
   where
-    (graph, vertex_fn,_) = graphFromEdges edges0
+    (graph, vertex_fn, _) = graphFromEdges edges0
     forest             = scc graph
     decode (Node v []) | mentions_itself v = CyclicSCC [vertex_fn v]
                        | otherwise         = AcyclicSCC (vertex_fn v)
@@ -213,8 +213,8 @@ graphFromEdges'
         :: Ord key
         => [(node, key, [key])]
         -> (Graph, Vertex -> (node, key, [key]))
-graphFromEdges' x = (a,b) where
-    (a,b,_) = graphFromEdges x
+graphFromEdges' x = (a, b) where
+    (a, b, _) = graphFromEdges x
 
 -- | Build a graph from a list of nodes uniquely identified by keys,
 -- with a list of keys of nodes this node should have edges to.
@@ -228,15 +228,15 @@ graphFromEdges edges0
   = (graph, \v -> vertex_map ! v, key_vertex)
   where
     max_v           = length edges0 - 1
-    bounds0         = (0,max_v) :: (Vertex, Vertex)
+    bounds0         = (0, max_v) :: (Vertex, Vertex)
     sorted_edges    = sortBy lt edges0
     edges1          = zipWith (,) [0..] sorted_edges
 
     graph           = array bounds0 [(,) v (mapMaybe key_vertex ks) | (,) v (_,    _, ks) <- edges1]
-    key_map         = array bounds0 [(,) v k                       | (,) v (_,    k, _ ) <- edges1]
+    key_map         = array bounds0 [(,) v k                        | (,) v (_,    k, _ ) <- edges1]
     vertex_map      = array bounds0 edges1
 
-    (_,k1,_) `lt` (_,k2,_) = k1 `compare` k2
+    (_, k1, _) `lt` (_, k2, _) = k1 `compare` k2
 
     -- key_vertex :: key -> Maybe Vertex
     --  returns Nothing for non-interesting vertices
@@ -245,9 +245,9 @@ graphFromEdges edges0
                      findVertex a b | a > b
                               = Nothing
                      findVertex a b = case compare k (key_map ! mid) of
-                                   LT -> findVertex a (mid-1)
+                                   LT -> findVertex a (mid - 1)
                                    EQ -> Just mid
-                                   GT -> findVertex (mid+1) b
+                                   GT -> findVertex (mid + 1) b
                               where
                                 mid = a + (b - a) `div` 2
 
@@ -465,18 +465,18 @@ bcc g = (concat . map bicomps . map (do_label g dnum)) forest
  where forest = dff g
        dnum   = preArr (bounds g) forest
 
-do_label :: Graph -> Table Int -> Tree Vertex -> Tree (Vertex,Int,Int)
-do_label g dnum (Node v ts) = Node (v,dnum!v,lv) us
+do_label :: Graph -> Table Int -> Tree Vertex -> Tree (Vertex, Int, Int)
+do_label g dnum (Node v ts) = Node (v, dnum!v, lv) us
  where us = map (do_label g dnum) ts
        lv = minimum ([dnum!v] ++ [dnum!w | w <- g!v]
-                     ++ [lu | Node (_,_,lu) _ <- us])
+                     ++ [lu | Node (_, _, lu) _ <- us])
 
-bicomps :: Tree (Vertex,Int,Int) -> Forest [Vertex]
-bicomps (Node (v,_,_) ts)
-      = [ Node (v:vs) us | (_,Node vs us) <- map collect ts]
+bicomps :: Tree (Vertex, Int, Int) -> Forest [Vertex]
+bicomps (Node (v, _, _) ts)
+      = [ Node (v:vs) us | (_, Node vs us) <- map collect ts]
 
-collect :: Tree (Vertex,Int,Int) -> (Int, Tree [Vertex])
-collect (Node (v,dv,lv) ts) = (lv, Node (v:vs) cs)
+collect :: Tree (Vertex, Int, Int) -> (Int, Tree [Vertex])
+collect (Node (v, dv, lv) ts) = (lv, Node (v:vs) cs)
  where collected = map collect ts
        vs = concat [ ws | (lw, Node ws _) <- collected, lw<dv]
        cs = concat [ if lw<dv then us else [Node (v:ws) us]
