@@ -96,8 +96,7 @@ data SCC vertex = AcyclicSCC vertex     -- ^ A single vertex that is not
                                         -- reachable vertices.
 
 instance NFData a => NFData (SCC a) where
-    rnf (AcyclicSCC v) = rnf v
-    rnf (CyclicSCC vs) = rnf vs
+    rnf = rnf . flattenSCC
 
 instance Functor SCC where
     fmap f (AcyclicSCC v) = AcyclicSCC (f v)
