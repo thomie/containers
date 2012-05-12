@@ -95,6 +95,10 @@ data SCC vertex = AcyclicSCC vertex     -- ^ A single vertex that is not
                 | CyclicSCC  [vertex]   -- ^ A maximal set of mutually
                                         -- reachable vertices.
 
+instance Functor SCC where
+    fmap f (AcyclicSCC v) = AcyclicSCC (f v)
+    fmap f (CyclicSCC vs) = CyclicSCC (map f vs)
+
 instance NFData a => NFData (SCC a) where
     rnf = rnf . flattenSCC
 
@@ -125,8 +129,8 @@ stronglyConnComp
 stronglyConnComp edges0
   = map get_node (stronglyConnCompR edges0)
   where
-    get_node (AcyclicSCC (n, _, _)) = AcyclicSCC n
-    get_node (CyclicSCC triples)     = CyclicSCC [n | (n,_,_) <- triples]
+    get_node = fmap first
+    first (n, _, _) = n
 
 -- | The strongly connected components of a directed graph, topologically
 -- sorted.  The function is the same as 'stronglyConnComp', except that
@@ -145,14 +149,15 @@ stronglyConnCompR
 
 stronglyConnCompR [] = []  -- added to avoid creating empty array in graphFromEdges -- SOF
 stronglyConnCompR edges0
-  = map decode forest
+  = map (decode . pack) forest
   where
     (graph, vertex_fn, _) = graphFromEdges edges0
     forest             = scc graph
-    decode (Node v []) | mentions_itself v = CyclicSCC [vertex_fn v]
-                       | otherwise         = AcyclicSCC (vertex_fn v)
-    decode t = CyclicSCC $ map vertex_fn $ flatten t
+    pack (Node v []) | mentions_itself v = CyclicSCC [v]
+                     | otherwise         = AcyclicSCC v
+    pack t = CyclicSCC $ flatten t
     mentions_itself v = v `elem` (graph ! v)
+    decode = fmap vertex_fn
 
 -------------------------------------------------------------------------
 --                                                                      -
