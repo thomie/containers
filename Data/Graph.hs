@@ -72,7 +72,7 @@ import Data.Array.ST (STArray, newArray, readArray, writeArray)
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as Set
 #endif
-import Data.Tree (Tree(Node), Forest)
+import Data.Tree (Tree(Node), Forest, flatten)
 
 -- std interfaces
 #if !MIN_VERSION_base(4,8,0)
@@ -152,9 +152,7 @@ stronglyConnCompR edges0
     forest             = scc graph
     decode (Node v []) | mentions_itself v = CyclicSCC [vertex_fn v]
                        | otherwise         = AcyclicSCC (vertex_fn v)
-    decode other = CyclicSCC (dec other [])
-                 where
-                   dec (Node v ts) vs = vertex_fn v : foldr dec vs ts
+    decode t = CyclicSCC $ map vertex_fn $ flatten t
     mentions_itself v = v `elem` (graph ! v)
 
 -------------------------------------------------------------------------
